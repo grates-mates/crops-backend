@@ -21,12 +21,12 @@ exports.login = catchAsync(async(req,res,next)=>{
     const email = req.body.email;
     const password = req.body.password;
     // 1. check email and password was provided by user or not
-    if(!email || !password) throw new AppError("Email and Password is required for login.",401);
+    if(!email || !password) return next(new AppError("Email and Password is required for login.",401));
     // 2. find account based on email and match password
     const user = await User.findOne({email:req.body.email}).select("+password");
-    if(!user) throw  new AppError("Email or Password is wrong please provided correct accounts details.",401);
+    if(!user) return next(new AppError("Email or Password is wrong please provided correct accounts details.",401));
     const isMatch = await user.checkPassword(req.body.password,user.password);
-    if(!isMatch) throw  new AppError("Email or Password is wrong please provided correct accounts details.",401);
+    if(!isMatch) return next(new AppError("Email or Password is wrong please provided correct accounts details.",401));
     // 3. if everything ok generates and send JWT to client
     createSendToken(user,200,res)
 });
@@ -102,6 +102,17 @@ const  updatePassword = catchAsync(async (req,res,next)=>{
    createSendToken(req.user,201,res);
 });
 
+const getUser = (req,res,next)=>{
+    res.json(
+        {
+            status:"success",
+            data:{
+                user:req.user
+            }
+        }
+    ).status(200);
+}
+
 
 
 const getJWTById= id=>{
@@ -124,5 +135,6 @@ module.exports = {
     ...exports,
     forgetPassword,
     resetPassword,
-    updatePassword
+    updatePassword,
+    getUser
 }
